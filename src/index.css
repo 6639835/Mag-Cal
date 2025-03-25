@@ -1,0 +1,83 @@
+/* Import Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
+/* Fix for map container height issues */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  transition: filter 0.3s ease;
+}
+
+/* Fix for marker icon issues in production */
+.leaflet-default-icon-path {
+  background-image: url(https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png);
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #f8f9fa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Apply transitions to all Mantine components */
+* {
+  transition-property: color, background-color, border-color, box-shadow, filter, transform;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+.results-card {
+  transition: transform 0.3s ease;
+}
+
+.results-card:hover {
+  transform: translateY(-5px);
+}
+
+.compass-animation {
+  animation: spin 10s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark mode map adjustments */
+[data-mantine-color-scheme="dark"] .leaflet-container {
+  filter: brightness(0.8) invert(0.2) hue-rotate(180deg);
+}
+
+/* Theme transition animation */
+.theme-transition {
+  animation: theme-fade 0.3s ease;
+}
+
+@keyframes theme-fade {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+} 
