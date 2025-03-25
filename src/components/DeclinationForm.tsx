@@ -9,10 +9,22 @@ import {
   Box,
   Code,
   Collapse,
+  Paper,
+  Stack,
+  rem,
+  useMantineTheme,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePickerInput } from '@mantine/dates';
-import { IconQuestionMark, IconCalculator, IconCurrentLocation, IconLink } from '@tabler/icons-react';
+import { 
+  IconQuestionMark, 
+  IconCalculator, 
+  IconCurrentLocation, 
+  IconLink,
+  IconMapPin,
+  IconMountain,
+  IconCalendar,
+} from '@tabler/icons-react';
 import { calculateDeclination, Result, DeclinationParams } from '../utils/api';
 
 interface DeclinationFormProps {
@@ -155,126 +167,147 @@ function DeclinationForm({
   };
 
   return (
-    <Box>
+    <Paper shadow="sm" p="md" radius="md" withBorder>
       <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <Group align="flex-end" mb="xs">
-              <Text fw={500} size="sm">Coordinates</Text>
+        <Stack gap="lg">
+          <Box>
+            <Group justify="space-between" mb="md">
+              <Text fw={700} size="lg">Calculate Magnetic Declination</Text>
               <Button 
-                variant="subtle" 
-                size="xs"
+                variant="light"
+                size="sm"
                 onClick={getUserLocation}
-                leftSection={<IconCurrentLocation size={14} />}
+                leftSection={<IconCurrentLocation size={16} />}
+                loading={isLoading}
               >
                 Use my location
               </Button>
             </Group>
             
-            <Grid>
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <NumberInput
-                  label="Latitude"
-                  description="Decimal degrees (e.g., 40.7128)"
-                  placeholder="Enter latitude"
-                  decimalScale={6}
-                  step={0.1}
-                  min={-90}
-                  max={90}
-                  required
-                  {...form.getInputProps('latitude')}
-                  rightSection={
-                    <Tooltip label="Positive value for North, negative for South">
-                      <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
-                    </Tooltip>
-                  }
-                />
+            <Grid gutter="md">
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <Stack gap="xs">
+                  <Text fw={500} size="sm" c="dimmed">Location Coordinates</Text>
+                  <Grid>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <NumberInput
+                        label="Latitude"
+                        description="Decimal degrees (e.g., 40.7128)"
+                        placeholder="Enter latitude"
+                        decimalScale={6}
+                        step={0.1}
+                        min={-90}
+                        max={90}
+                        required
+                        {...form.getInputProps('latitude')}
+                        leftSection={<IconMapPin size={16} style={{ color: 'var(--mantine-color-dimmed)' }} />}
+                        rightSection={
+                          <Tooltip label="Positive value for North, negative for South">
+                            <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
+                          </Tooltip>
+                        }
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <NumberInput
+                        label="Longitude"
+                        description="Decimal degrees (e.g., -74.0060)"
+                        placeholder="Enter longitude"
+                        decimalScale={6}
+                        step={0.1}
+                        min={-180}
+                        max={180}
+                        required
+                        {...form.getInputProps('longitude')}
+                        leftSection={<IconMapPin size={16} style={{ color: 'var(--mantine-color-dimmed)' }} />}
+                        rightSection={
+                          <Tooltip label="Positive value for East, negative for West">
+                            <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
+                          </Tooltip>
+                        }
+                      />
+                    </Grid.Col>
+                  </Grid>
+                </Stack>
               </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <NumberInput
-                  label="Longitude"
-                  description="Decimal degrees (e.g., -74.0060)"
-                  placeholder="Enter longitude"
-                  decimalScale={6}
-                  step={0.1}
-                  min={-180}
-                  max={180}
-                  required
-                  {...form.getInputProps('longitude')}
-                  rightSection={
-                    <Tooltip label="Positive value for East, negative for West">
-                      <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
-                    </Tooltip>
-                  }
-                />
+
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <Stack gap="xs">
+                  <Text fw={500} size="sm" c="dimmed">Additional Parameters</Text>
+                  <Grid>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <NumberInput
+                        label="Elevation"
+                        description="Meters above sea level"
+                        placeholder="Enter elevation"
+                        step={10}
+                        min={-11000}
+                        max={85000}
+                        defaultValue={0}
+                        {...form.getInputProps('elevation')}
+                        leftSection={<IconMountain size={16} style={{ color: 'var(--mantine-color-dimmed)' }} />}
+                        rightSection={
+                          <Tooltip label="Optional: Default is 0 (sea level)">
+                            <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
+                          </Tooltip>
+                        }
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, sm: 6 }}>
+                      <DatePickerInput
+                        label="Date"
+                        description="Declination varies over time"
+                        placeholder="Pick date"
+                        required
+                        defaultValue={new Date()}
+                        {...form.getInputProps('date')}
+                        leftSection={<IconCalendar size={16} style={{ color: 'var(--mantine-color-dimmed)' }} />}
+                        rightSection={
+                          <Tooltip label="Select a date to calculate the declination for">
+                            <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
+                          </Tooltip>
+                        }
+                      />
+                    </Grid.Col>
+                  </Grid>
+                </Stack>
               </Grid.Col>
             </Grid>
-          </Grid.Col>
+          </Box>
 
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <Grid>
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <NumberInput
-                  label="Elevation"
-                  description="Meters above sea level"
-                  placeholder="Enter elevation"
-                  step={10}
-                  min={-11000}
-                  max={85000}
-                  defaultValue={0}
-                  {...form.getInputProps('elevation')}
-                  rightSection={
-                    <Tooltip label="Optional: Default is 0 (sea level)">
-                      <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
-                    </Tooltip>
-                  }
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 6 }}>
-                <DatePickerInput
-                  label="Date"
-                  description="Declination varies over time"
-                  placeholder="Pick date"
-                  required
-                  defaultValue={new Date()}
-                  {...form.getInputProps('date')}
-                  rightSection={
-                    <Tooltip label="Select a date to calculate the declination for">
-                      <IconQuestionMark size={14} style={{ cursor: 'pointer' }} />
-                    </Tooltip>
-                  }
-                />
-              </Grid.Col>
-            </Grid>
-          </Grid.Col>
-        </Grid>
-
-        <Group justify="flex-end" mt="xl">
-          <Button 
-            type="submit" 
-            loading={isLoading}
-            leftSection={<IconCalculator size={16} />}
-          >
-            Calculate Declination
-          </Button>
-        </Group>
-      </form>
-      
-      <Collapse in={showApiUrl}>
-        <Box mt="md" p="md" style={{ background: '#f5f5f5', borderRadius: '4px' }}>
-          <Group mb="xs">
-            <IconLink size={16} />
-            <Text fw={500}>API URL for testing:</Text>
+          <Group justify="flex-end" mt="md">
+            <Button
+              type="submit"
+              size="md"
+              leftSection={<IconCalculator size={16} />}
+              loading={isLoading}
+            >
+              Calculate Declination
+            </Button>
           </Group>
-          <Code block style={{ overflowX: 'auto', wordBreak: 'break-all' }}>
-            {apiUrl}
-          </Code>
-          <Text size="xs" mt="xs" c="dimmed">
-            You can open this URL in a new tab to see the raw API response.
-          </Text>
-        </Box>
+        </Stack>
+      </form>
+
+      <Collapse in={showApiUrl} mt="md">
+        <Paper withBorder p="xs" radius="sm" bg="var(--mantine-color-gray-0)">
+          <Group justify="space-between" mb="xs">
+            <Text size="sm" fw={500}>API URL</Text>
+            <Button
+              variant="subtle"
+              size="xs"
+              leftSection={<IconLink size={14} />}
+              onClick={() => {
+                navigator.clipboard.writeText(apiUrl);
+                // You might want to add a toast notification here
+              }}
+            >
+              Copy
+            </Button>
+          </Group>
+          <Code block>{apiUrl}</Code>
+        </Paper>
       </Collapse>
-    </Box>
+    </Paper>
   );
 }
 
