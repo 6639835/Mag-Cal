@@ -115,7 +115,7 @@ function HistoryPage() {
       
       {history.length > 0 ? (
         <>
-          <Group position="apart" mb="md">
+          <Group justify="apart" mb="md">
             <Text size="sm">{history.length} calculation{history.length !== 1 ? 's' : ''}</Text>
             <Group>
               <Button 
@@ -197,10 +197,10 @@ function HistoryPage() {
         </>
       ) : (
         <Card withBorder p="xl">
-          <Stack align="center" spacing="md">
+          <Stack align="center" gap="md">
             <IconCalendar size={48} opacity={0.5} />
             <Title order={3}>No history yet</Title>
-            <Text align="center" c="dimmed">
+            <Text ta="center" c="dimmed">
               When you calculate magnetic declination, your results will be saved here for future reference.
             </Text>
           </Stack>

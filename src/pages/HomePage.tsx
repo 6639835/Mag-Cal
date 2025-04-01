@@ -30,14 +30,13 @@ import {
 } from '@tabler/icons-react';
 import DeclinationForm from '../components/DeclinationForm';
 import DeclinationResults from '../components/DeclinationResults';
-import { calculateDeclination } from '../utils/api';
-import { Result } from '../types';
+import { calculateDeclination, Result } from '../utils/api';
 
 function HomePage() {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleCalculateSuccess = (data: Result) => {
+  const handleCalculateSuccess = (data: Result, isMock?: boolean) => {
     setResult(data);
     setLoading(false);
     
@@ -46,6 +45,16 @@ function HomePage() {
       message: 'Declination calculation was successful!',
       color: 'green',
       icon: <IconCheck size={16} />,
+    });
+  };
+
+  const handleError = (message: string) => {
+    setLoading(false);
+    
+    showNotification({
+      title: 'Error',
+      message,
+      color: 'red',
     });
   };
 
@@ -127,7 +136,12 @@ function HomePage() {
 
       <Paper withBorder shadow="md" p={30} mt={40} radius="md" id="calculator">
         <Title order={2} mb="lg">Calculate Declination</Title>
-        <DeclinationForm onCalculate={handleCalculateSuccess} isLoading={loading} setLoading={setLoading} />
+        <DeclinationForm 
+          onCalculate={handleCalculateSuccess} 
+          onError={handleError}
+          isLoading={loading} 
+          setLoading={setLoading} 
+        />
       </Paper>
 
       {result && (

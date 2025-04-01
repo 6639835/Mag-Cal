@@ -1,10 +1,10 @@
-import { Footer as MantineFooter, Container, Group, Text, Anchor } from '@mantine/core';
+import { Box, Container, Group, Text, Anchor } from '@mantine/core';
 
 function Footer() {
   const year = new Date().getFullYear();
   
   return (
-    <MantineFooter height={60} p="md">
+    <Box component="footer" py="md" style={{ borderTop: '1px solid #e9ecef' }}>
       <Container size="lg">
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
@@ -21,7 +21,7 @@ function Footer() {
           </Group>
         </Group>
       </Container>
-    </MantineFooter>
+    </Box>
   );
 }
 

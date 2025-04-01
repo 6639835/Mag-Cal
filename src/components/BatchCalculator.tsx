@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Paper, Title, Text, Button, Stack, Textarea, Group, 
   Loader, Table, Card, ScrollArea, Switch, NumberInput, 
@@ -61,6 +61,16 @@ const BatchCalculator: React.FC<BatchCalculatorProps> = ({ selectedCoordinates, 
   const [showNames, setShowNames] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('input');
   const [showSampleData, setShowSampleData] = useState(false);
+
+  // Use selectedCoordinates if provided
+  useEffect(() => {
+    if (selectedCoordinates && selectedCoordinates.latitude && selectedCoordinates.longitude) {
+      // Add the coordinates to input text if it's empty
+      if (!inputText.trim()) {
+        setInputText(`Selected Location, ${selectedCoordinates.latitude}, ${selectedCoordinates.longitude}`);
+      }
+    }
+  }, [selectedCoordinates]);
 
   // Sample data for easy input
   const sampleData = `New York City, 40.7128, -74.0060
@@ -176,7 +186,9 @@ Mount Everest, 27.9881, 86.9250`;
     const validCoordinates = parsedCoordinates.filter(p => p.valid);
     
     if (validCoordinates.length === 0) {
-      setStatusMessage({ text: 'No valid coordinates to calculate', type: 'error' });
+      const errorMsg = 'No valid coordinates to calculate';
+      setStatusMessage({ text: errorMsg, type: 'error' });
+      onError?.(errorMsg);
       return;
     }
     
@@ -208,8 +220,17 @@ Mount Everest, 27.9881, 86.9250`;
             ...result,
             name: coord.name
           });
+
+          // Call the parent's onCalculate with the first result
+          if (batchResults.length === 1 && onCalculate) {
+            onCalculate(result);
+          }
         } catch (err) {
           console.error(`Error calculating for ${coord.latitude}, ${coord.longitude}:`, err);
+          const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+          // Notify parent component of error
+          onError?.(errorMsg);
+          
           // Add a placeholder for failed calculation
           batchResults.push({
             latitude: coord.latitude,
@@ -220,7 +241,7 @@ Mount Everest, 27.9881, 86.9250`;
             declination_sv: { value: 0, unit: 'degrees/year' },
             model: 'WMMHR',
             name: coord.name,
-            error: err instanceof Error ? err.message : 'Unknown error'
+            error: errorMsg
           } as any);
         }
         
@@ -232,10 +253,12 @@ Mount Everest, 27.9881, 86.9250`;
       // Switch to results tab after calculation
       setActiveTab('results');
     } catch (err) {
+      const errorMsg = `Batch calculation failed: ${err instanceof Error ? err.message : String(err)}`;
       setStatusMessage({ 
-        text: `Batch calculation failed: ${err instanceof Error ? err.message : String(err)}`,
+        text: errorMsg,
         type: 'error'
       });
+      onError?.(errorMsg);
     } finally {
       setIsLoading(false);
     }

@@ -19,10 +19,14 @@ import {
   IconArrowsDownUp,
   IconInfoCircle
 } from '@tabler/icons-react';
-import { Result } from '../utils/api';
+import { Result as ApiResult } from '../utils/api';
+import { Result as TypesResult } from '../types';
+
+// Allow either type of Result to be passed in
+type CombinedResult = ApiResult | TypesResult;
 
 interface DeclinationResultsProps {
-  result: Result;
+  result: CombinedResult;
   isMockData?: boolean;
   selectedCoordinates?: {
     latitude: number;
@@ -34,6 +38,11 @@ interface DeclinationResultsProps {
 function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }: DeclinationResultsProps) {
   console.log("Rendering DeclinationResults with:", result);
 
+  // Helper function to check if we're dealing with the types.ts Result
+  const isTypesResult = (res: CombinedResult): res is TypesResult => {
+    return typeof res.declination === 'number';
+  };
+
   // Format declination for display
   const formatAngle = (angle: number) => {
     if (angle === undefined || angle === null) return 'N/A';
@@ -44,52 +53,64 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
   };
 
   // For east/west display - IMPORTANT: Negative declination is WEST, positive is EAST
-  const isEast = result.declination?.value >= 0;
-  const decimalDeclination = result.declination?.value !== undefined ? 
-    Math.abs(result.declination.value).toFixed(5) : 'N/A';
+  // Handle both types of Result
+  const declinationValue = isTypesResult(result) 
+    ? result.declination 
+    : result.declination?.value;
+  const isEast = declinationValue !== undefined ? declinationValue >= 0 : false;
+  const decimalDeclination = declinationValue !== undefined 
+    ? Math.abs(declinationValue).toFixed(5) 
+    : 'N/A';
 
   // Annual change
-  const isIncreasing = result.declination_sv?.value >= 0;
-  const annualChange = result.declination_sv?.value !== undefined ?
-    Math.abs(result.declination_sv.value).toFixed(5) : 'N/A';
+  const annualChangeValue = isTypesResult(result)
+    ? result.declination_sv
+    : result.declination_sv?.value;
+  const isIncreasing = annualChangeValue !== undefined ? annualChangeValue >= 0 : false;
+  const annualChange = annualChangeValue !== undefined
+    ? Math.abs(annualChangeValue).toFixed(5)
+    : 'N/A';
 
   // Format date
-  const formatDate = (dateStr: string | number) => {
-    if (!dateStr) return 'N/A';
+  const formatDate = (date: string | Date | number) => {
+    if (!date) return 'N/A';
     try {
       // If it's a number like 2025.2246, format accordingly
-      if (typeof dateStr === 'number') {
-        const year = Math.floor(dateStr);
-        const fraction = dateStr - year;
+      if (typeof date === 'number') {
+        const year = Math.floor(date);
+        const fraction = date - year;
         const daysInYear = new Date(year, 11, 31).getDate() > 365 ? 366 : 365;
         const dayOfYear = Math.round(fraction * daysInYear);
-        const date = new Date(year, 0, 1);
-        date.setDate(date.getDate() + dayOfYear - 1);
-        return date.toLocaleDateString('en-US', {
+        const dateObj = new Date(year, 0, 1);
+        dateObj.setDate(dateObj.getDate() + dayOfYear - 1);
+        return dateObj.toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         });
       }
       
-      return new Date(dateStr).toLocaleDateString('en-US', {
+      return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
     } catch (error) {
       console.error('Error formatting date:', error);
-      return String(dateStr) || 'N/A';
+      return String(date) || 'N/A';
     }
   };
 
   // Safe formatting for numeric values
-  const formatNumber = (component: { value: number, unit: string } | undefined, decimals = 0) => {
-    if (!component || component.value === undefined) return 'N/A';
+  const formatNumber = (value: number | { value: number, unit: string } | undefined, decimals = 0) => {
+    if (!value) return 'N/A';
     try {
-      return `${component.value.toFixed(decimals)} ${component.unit || ''}`;
+      if (typeof value === 'object') {
+        return `${value.value.toFixed(decimals)} ${value.unit || ''}`;
+      }
+      return `${value.toFixed(decimals)}`;
     } catch (error) {
-      console.error('Error formatting number:', error, component);
+      console.error('Error formatting number:', error, value);
       return 'N/A';
     }
   };
@@ -158,7 +179,7 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
         </Grid.Col>
       </Grid>
       
-      {!result.inclination && (
+      {!isTypesResult(result) && !result.inclination && (
         <Alert icon={<IconInfoCircle size={16} />} color="blue" mt="md">
           The NOAA WMMHR API provides declination data only. For additional magnetic field components,
           consider using the IGRF model or the full WMM calculator.

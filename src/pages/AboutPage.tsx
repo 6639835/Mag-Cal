@@ -35,8 +35,10 @@ function AboutPage() {
                 src="/declination-illustration.png"
                 alt="Magnetic declination explained"
                 fallbackSrc="https://placehold.co/800x400?text=Magnetic+Declination+Illustrated"
-                caption="The angle between true north and magnetic north is the magnetic declination"
               />
+              <Text size="sm" ta="center" c="dimmed" mt="xs">
+                The angle between true north and magnetic north is the magnetic declination
+              </Text>
             </Grid.Col>
           </Grid>
 

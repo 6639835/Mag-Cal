@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Header as MantineHeader, 
+  AppShell, 
   Group, 
   Container, 
   Burger, 
@@ -27,7 +27,7 @@ function Header() {
   const { pathname } = useLocation();
 
   return (
-    <MantineHeader height={60} p="md">
+    <AppShell.Header p="md">
       <Container size="lg">
         <Group justify="space-between">
           <Group>
@@ -93,7 +93,7 @@ function Header() {
           ))}
         </Stack>
       </Drawer>
-    </MantineHeader>
+    </AppShell.Header>
   );
 }
 
