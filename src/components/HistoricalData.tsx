@@ -44,6 +44,7 @@ import {
 } from '@tabler/icons-react';
 import { calculateDeclination } from '../utils/api';
 import MapSelector from './MapSelector';
+import { useAppState } from '../contexts/AppStateContext';
 
 export interface HistoricalDataProps {
   selectedCoordinates: { latitude: number; longitude: number } | null;
@@ -59,6 +60,7 @@ interface DataPoint {
 export function HistoricalData({ selectedCoordinates, onLocationSelected, onTransferToMap }: HistoricalDataProps) {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
+  const { setActiveTab } = useAppState();
   const isDark = colorScheme === 'dark';
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(false);
@@ -182,6 +184,19 @@ export function HistoricalData({ selectedCoordinates, onLocationSelected, onTran
     }
   };
 
+  // Enhanced function to handle map navigation
+  const handleGoToMap = () => {
+    console.log("Go to map button clicked");
+    if (onTransferToMap) {
+      console.log("Calling onTransferToMap");
+      onTransferToMap();
+    }
+    
+    // Force tab change directly
+    console.log("Force setting tab to map");
+    setActiveTab('map');
+  };
+
   return (
     <Box>
       <Paper p="xl" radius="md" withBorder>
@@ -222,8 +237,7 @@ export function HistoricalData({ selectedCoordinates, onLocationSelected, onTran
                   <Button 
                     variant="light" 
                     leftSection={<IconMap size={16} />}
-                    onClick={onTransferToMap}
-                    disabled={!onTransferToMap}
+                    onClick={handleGoToMap}
                   >
                     View on Map
                   </Button>
@@ -232,16 +246,14 @@ export function HistoricalData({ selectedCoordinates, onLocationSelected, onTran
             ) : (
               <Alert color="yellow" icon={<IconInfoCircle size={16} />}>
                 <Text>No location selected. Please select a location from the Map tab first.</Text>
-                {onTransferToMap && (
-                  <Button 
-                    mt="sm"
-                    variant="light" 
-                    leftSection={<IconMap size={16} />}
-                    onClick={onTransferToMap}
-                  >
-                    Go to Map
-                  </Button>
-                )}
+                <Button 
+                  mt="sm"
+                  variant="light" 
+                  leftSection={<IconMap size={16} />}
+                  onClick={handleGoToMap}
+                >
+                  Go to Map
+                </Button>
               </Alert>
             )}
           </Card>

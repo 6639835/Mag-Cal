@@ -48,10 +48,6 @@ interface AppStateContextType {
   
   // Shareable state
   handleShare: () => Promise<void>;
-  
-  // Help documentation
-  showHelp: boolean;
-  setShowHelp: (show: boolean) => void;
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -61,9 +57,6 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
   
   // Tab state
   const [activeTab, setActiveTab] = useState('form');
-  
-  // Help documentation state
-  const [showHelp, setShowHelp] = useState(false);
   
   // Form state
   const { 
@@ -147,7 +140,7 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, []);
   
-  // Function to handle tab changes
+  // Function to handle tab changes with toast
   const handleTabChange = (value: string): void => {
     setActiveTab(value);
     showToast(`Switched to ${value} tab`, 'info');
@@ -155,14 +148,27 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
   
   // Function to transfer history coordinates to map
   const transferHistoryToMap = (): void => {
+    console.log('transferHistoryToMap called');
+    console.log('Current tab before transfer:', activeTab);
+    
     if (historyCoordinates) {
+      console.log('Coordinates to transfer:', historyCoordinates);
       setMapCoordinates(
         historyCoordinates.latitude,
         historyCoordinates.longitude
       );
+      console.log('Setting active tab to map');
       setActiveTab('map');
+      console.log('Active tab after setActiveTab:', activeTab);
+      
+      // Add timeout to check if tab changes after state update
+      setTimeout(() => {
+        console.log('Active tab after timeout:', activeTab);
+      }, 100);
+      
       showToast('Coordinates transferred to map', 'success');
     } else {
+      console.log('No coordinates to transfer');
       showToast('No coordinates to transfer', 'warning');
     }
   };
@@ -186,7 +192,7 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
   
   const value: AppStateContextType = {
     activeTab,
-    setActiveTab: handleTabChange,
+    setActiveTab,
     
     formCoordinates,
     setFormCoordinates,
@@ -213,10 +219,7 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     setError,
     isMockData,
     
-    handleShare,
-    
-    showHelp,
-    setShowHelp
+    handleShare
   };
   
   return (
