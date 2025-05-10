@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Title, 
   Text, 
@@ -115,15 +115,42 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
     }
   };
 
+  // Calculate compass rotation for animation
+  const compassRotation = isEast ? declinationValue : -Math.abs(declinationValue || 0);
+
+  // Add keyframes for fadeIn and pulse animations
+  useEffect(() => {
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(0, 120, 255, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 120, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 120, 255, 0); }
+      }
+    `;
+    document.head.appendChild(styleEl);
+    
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
+
   return (
     <Box className="results-card">
       <Title order={2} mb="md">Declination Results</Title>
       
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Paper p="md" withBorder radius="md">
+          <Paper p="md" withBorder radius="md" shadow="sm">
             <Group mb="xs">
-              <ThemeIcon size={36} radius="md" color="blue">
+              <ThemeIcon size={36} radius="md" color="blue" className="pulse-animation">
                 <IconCompass size={24} />
               </ThemeIcon>
               <div>
@@ -132,16 +159,90 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
               </div>
             </Group>
             
-            <Group align="center" mt="md">
-              <Title order={1}>
-                {decimalDeclination}°
-              </Title>
-              <Badge size="lg" color={isEast ? "blue" : "red"}>
-                {isEast ? "East" : "West"}
-              </Badge>
-            </Group>
+            <Box style={{ position: 'relative', textAlign: 'center', marginTop: '15px', marginBottom: '15px' }}>
+              <div style={{ 
+                  position: 'relative', 
+                  width: '120px', 
+                  height: '120px', 
+                  margin: '0 auto',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.05) 100%)', 
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '10px'
+                }}>
+                <div style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    position: 'relative',
+                    transform: `rotate(${compassRotation}deg)`,
+                    transition: 'transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  }}>
+                  <div style={{ 
+                      position: 'absolute', 
+                      top: '10px', 
+                      left: '50%', 
+                      transform: 'translateX(-50%)', 
+                      color: 'red', 
+                      fontWeight: 'bold' 
+                    }}>N</div>
+                  <div style={{ 
+                      position: 'absolute', 
+                      bottom: '10px', 
+                      left: '50%', 
+                      transform: 'translateX(-50%)', 
+                      color: 'black', 
+                      fontWeight: 'bold' 
+                    }}>S</div>
+                  <div style={{ 
+                      position: 'absolute', 
+                      left: '10px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)', 
+                      color: 'black', 
+                      fontWeight: 'bold' 
+                    }}>W</div>
+                  <div style={{ 
+                      position: 'absolute', 
+                      right: '10px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)', 
+                      color: 'black', 
+                      fontWeight: 'bold' 
+                    }}>E</div>
+                  <div style={{ 
+                      position: 'absolute', 
+                      left: '50%', 
+                      top: 0, 
+                      bottom: 0, 
+                      width: '2px', 
+                      backgroundColor: 'red', 
+                      transform: 'translateX(-50%)'
+                    }}></div>
+                  <div style={{ 
+                      position: 'absolute', 
+                      top: '50%', 
+                      left: 0, 
+                      right: 0, 
+                      height: '2px', 
+                      backgroundColor: 'black', 
+                      transform: 'translateY(-50%)'
+                    }}></div>
+                </div>
+              </div>
+              <Group justify="center" mt="md">
+                <Title order={1} style={{ fontWeight: 'bold', fontSize: '2.2rem' }}>
+                  {decimalDeclination}°
+                </Title>
+                <Badge size="xl" color={isEast ? "blue" : "red"} style={{ transform: 'translateY(4px)' }}>
+                  {isEast ? "East" : "West"}
+                </Badge>
+              </Group>
+            </Box>
             
-            <Text mt="xs" size="sm">
+            <Text mt="xs" size="sm" ta="center" fw={500}>
               {isEast 
                 ? "Add to true bearing to get magnetic bearing" 
                 : "Subtract from true bearing to get magnetic bearing"}
@@ -150,7 +251,7 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
         </Grid.Col>
         
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Paper p="md" withBorder radius="md">
+          <Paper p="md" withBorder radius="md" shadow="sm">
             <Group mb="xs">
               <ThemeIcon size={36} radius="md" color="cyan">
                 <IconArrowsDownUp size={24} />
@@ -161,16 +262,56 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
               </div>
             </Group>
             
-            <Group align="center" mt="md">
-              <Title order={2}>
+            <Box style={{ 
+              position: 'relative', 
+              height: '100px', 
+              margin: '20px 0', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center' 
+            }}>
+              <div style={{ 
+                position: 'relative', 
+                width: '80%', 
+                height: '6px', 
+                backgroundColor: 'rgba(0,0,0,0.1)', 
+                borderRadius: '3px' 
+              }}>
+                <div style={{ 
+                  position: 'absolute', 
+                  left: '50%', 
+                  top: '50%', 
+                  width: '12px', 
+                  height: '12px', 
+                  backgroundColor: isIncreasing ? '#12B886' : '#FF9500', 
+                  borderRadius: '50%', 
+                  transform: 'translate(-50%, -50%)',
+                  boxShadow: '0 0 10px rgba(0,0,0,0.2)'
+                }}></div>
+                <div style={{ 
+                  position: 'absolute', 
+                  left: isIncreasing ? 'calc(50% + 10px)' : 'calc(50% - 60px)', 
+                  top: '-30px', 
+                  fontSize: '24px', 
+                  fontWeight: 'bold',
+                  color: isIncreasing ? '#12B886' : '#FF9500',
+                  animation: 'fadeIn 0.8s forwards'
+                }}>
+                  {isIncreasing ? '↗' : '↘'}
+                </div>
+              </div>
+            </Box>
+            
+            <Group justify="center" mt="lg">
+              <Title order={2} style={{ fontWeight: 'bold' }}>
                 {annualChange}°/year
               </Title>
-              <Badge size="md" color={isIncreasing ? "teal" : "orange"}>
+              <Badge size="lg" color={isIncreasing ? "teal" : "orange"}>
                 {isIncreasing ? "Increasing" : "Decreasing"}
               </Badge>
             </Group>
             
-            <Text mt="xs" size="sm">
+            <Text mt="sm" size="sm" ta="center" fw={500}>
               {isIncreasing 
                 ? `Declination is moving eastward by ${annualChange}° per year` 
                 : `Declination is moving westward by ${annualChange}° per year`}
@@ -188,47 +329,49 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
       
       <Divider my="md" />
       
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 4 }}>
-          <Group>
-            <ThemeIcon size="md" color="gray" variant="light">
-              <IconMapPin size={16} />
-            </ThemeIcon>
-            <Text fw={500}>Location</Text>
-          </Group>
-          <Text size="sm" ml={26}>{result.latitude !== undefined ? result.latitude.toFixed(6) : 'N/A'}° N, {result.longitude !== undefined ? result.longitude.toFixed(6) : 'N/A'}° E</Text>
-        </Grid.Col>
-        
-        <Grid.Col span={{ base: 12, sm: 4 }}>
-          <Group>
-            <ThemeIcon size="md" color="gray" variant="light">
-              <IconMountain size={16} />
-            </ThemeIcon>
-            <Text fw={500}>Elevation</Text>
-          </Group>
-          <Text size="sm" ml={26}>{result.elevation !== undefined ? result.elevation : 'N/A'} km</Text>
-        </Grid.Col>
-        
-        <Grid.Col span={{ base: 12, sm: 4 }}>
-          <Group>
-            <ThemeIcon size="md" color="gray" variant="light">
-              <IconCalendar size={16} />
-            </ThemeIcon>
-            <Text fw={500}>Calculation Date</Text>
-          </Group>
-          <Text size="sm" ml={26}>{formatDate(result.date)}</Text>
-        </Grid.Col>
-        
-        <Grid.Col span={{ base: 12, sm: 12 }}>
-          <Group>
-            <ThemeIcon size="md" color="gray" variant="light">
-              <IconCompass size={16} />
-            </ThemeIcon>
-            <Text fw={500}>Model</Text>
-          </Group>
-          <Text size="sm" ml={26}>{result.model || 'N/A'}</Text>
-        </Grid.Col>
-      </Grid>
+      <Paper p="md" withBorder radius="md" shadow="sm" mt="md">
+        <Grid>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
+            <Group>
+              <ThemeIcon size="md" color="gray" variant="light">
+                <IconMapPin size={16} />
+              </ThemeIcon>
+              <Text fw={500}>Location</Text>
+            </Group>
+            <Text size="sm" ml={26}>{result.latitude !== undefined ? result.latitude.toFixed(6) : 'N/A'}° N, {result.longitude !== undefined ? result.longitude.toFixed(6) : 'N/A'}° E</Text>
+          </Grid.Col>
+          
+          <Grid.Col span={{ base: 12, sm: 4 }}>
+            <Group>
+              <ThemeIcon size="md" color="gray" variant="light">
+                <IconMountain size={16} />
+              </ThemeIcon>
+              <Text fw={500}>Elevation</Text>
+            </Group>
+            <Text size="sm" ml={26}>{result.elevation !== undefined ? result.elevation : 'N/A'} km</Text>
+          </Grid.Col>
+          
+          <Grid.Col span={{ base: 12, sm: 4 }}>
+            <Group>
+              <ThemeIcon size="md" color="gray" variant="light">
+                <IconCalendar size={16} />
+              </ThemeIcon>
+              <Text fw={500}>Calculation Date</Text>
+            </Group>
+            <Text size="sm" ml={26}>{formatDate(result.date)}</Text>
+          </Grid.Col>
+          
+          <Grid.Col span={{ base: 12, sm: 12 }}>
+            <Group>
+              <ThemeIcon size="md" color="gray" variant="light">
+                <IconCompass size={16} />
+              </ThemeIcon>
+              <Text fw={500}>Model</Text>
+            </Group>
+            <Text size="sm" ml={26}>{result.model || 'N/A'}</Text>
+          </Grid.Col>
+        </Grid>
+      </Paper>
     </Box>
   );
 }

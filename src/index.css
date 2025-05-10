@@ -5,7 +5,9 @@
 .leaflet-container {
   height: 100%;
   width: 100%;
-  transition: filter 0.3s ease;
+  transition: filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 8px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
 }
 
 /* Fix for marker icon issues in production */
@@ -32,52 +34,156 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1), color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Apply transitions to all Mantine components */
 * {
   transition-property: color, background-color, border-color, box-shadow, filter, transform;
-  transition-duration: 0.3s;
-  transition-timing-function: ease;
+  transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .results-card {
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .results-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
 }
 
 .compass-animation {
-  animation: spin 10s linear infinite;
+  animation: spin 20s linear infinite;
+  transform-origin: center;
+  will-change: transform;
 }
 
 @keyframes spin {
-  from {
+  0% {
     transform: rotate(0deg);
   }
-  to {
+  25% {
+    transform: rotate(100deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  75% {
+    transform: rotate(270deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }
 
 /* Dark mode map adjustments */
 [data-mantine-color-scheme="dark"] .leaflet-container {
-  filter: brightness(0.8) invert(0.2) hue-rotate(180deg);
+  filter: brightness(0.85) invert(0.2) hue-rotate(200deg);
 }
 
 /* Theme transition animation */
 .theme-transition {
-  animation: theme-fade 0.3s ease;
+  animation: theme-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes theme-fade {
-  from {
-    opacity: 0.5;
+  0% {
+    opacity: 0.6;
+    transform: scale(0.95);
   }
-  to {
+  100% {
     opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Paper component enhancements */
+.mantine-Paper-root {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow;
+}
+
+.mantine-Paper-root:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Button enhancements */
+.mantine-Button-root {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), 
+              box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1), 
+              background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mantine-Button-root:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.mantine-Button-root:active {
+  transform: translateY(0);
+}
+
+/* Badge enhancements */
+.mantine-Badge-root {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mantine-Badge-root:hover {
+  transform: scale(1.05);
+}
+
+/* ThemeIcon enhancements */
+.mantine-ThemeIcon-root {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mantine-ThemeIcon-root:hover {
+  transform: rotate(10deg);
+}
+
+/* Tab animations */
+.mantine-Tabs-tab {
+  position: relative;
+  overflow: hidden;
+}
+
+.mantine-Tabs-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mantine-Tabs-tab[data-active]::after,
+.mantine-Tabs-tab:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Map marker pulse animation */
+.high-visibility-marker {
+  z-index: 10000 !important;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(0, 120, 255, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(0, 120, 255, 0.7));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(0, 120, 255, 0.7));
   }
 } 

@@ -281,8 +281,36 @@ function DeclinationForm({
               size="md"
               leftSection={<IconCalculator size={16} />}
               loading={isLoading}
+              variant="gradient"
+              gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
+              className="calculate-button"
+              style={{
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
             >
-              Calculate Declination
+              <span 
+                style={{ 
+                  position: 'relative', 
+                  zIndex: 2
+                }}
+              >
+                Calculate Declination
+              </span>
+              <span 
+                className="button-shine-effect" 
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  left: 0,
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                  transform: 'translateX(-100%)',
+                  zIndex: 1
+                }}
+              ></span>
             </Button>
           </Group>
         </Stack>

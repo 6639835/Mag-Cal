@@ -95,6 +95,7 @@ interface MapSelectorProps {
   onError?: (message: string) => void;
   isLoading?: boolean;
   setLoading?: (loading: boolean) => void;
+  onShare?: (result: Result) => void;
 }
 
 // This component handles centering the map when coordinates change
@@ -146,18 +147,96 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   // Add additional state for theme transition detection
   const [isThemeTransitioning, setIsThemeTransitioning] = useState(false);
   const prevColorScheme = useRef(colorScheme);
+  
+  // Add animation states for map controls
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
 
-  // Detect theme changes
+  // Create animation styles with useEffect
   useEffect(() => {
-    if (prevColorScheme.current !== colorScheme) {
-      setIsThemeTransitioning(true);
-      const timeout = setTimeout(() => {
-        setIsThemeTransitioning(false);
-      }, 300);
-      prevColorScheme.current = colorScheme;
-      return () => clearTimeout(timeout);
-    }
-  }, [colorScheme]);
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .map-theme-transition {
+        animation: mapThemeTransition 0.6s ease;
+      }
+      
+      @keyframes mapThemeTransition {
+        0% { filter: blur(5px); transform: scale(0.98); }
+        100% { filter: blur(0); transform: scale(1); }
+      }
+      
+      .map-location-change {
+        animation: mapLocationChange 0.5s ease;
+      }
+      
+      @keyframes mapLocationChange {
+        0% { transform: scale(0.95); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+      }
+      
+      .button-shine-effect {
+        animation: shine 3s infinite linear;
+      }
+      
+      @keyframes shine {
+        0% { transform: translateX(-100%); }
+        20% { transform: translateX(100%); }
+        100% { transform: translateX(100%); }
+      }
+      
+      .calculate-button:hover .button-shine-effect {
+        animation: shine 1.5s infinite linear;
+      }
+      
+      .set-coords-button {
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .set-coords-button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.5);
+        opacity: 0;
+        border-radius: 100%;
+        transform: scale(1, 1) translate(-50%);
+        transform-origin: 50% 50%;
+      }
+      
+      .set-coords-button:hover::after {
+        animation: ripple 1s ease-out;
+      }
+      
+      @keyframes ripple {
+        0% {
+          transform: scale(0, 0);
+          opacity: 0.5;
+        }
+        20% {
+          transform: scale(25, 25);
+          opacity: 0.3;
+        }
+        100% {
+          opacity: 0;
+          transform: scale(40, 40);
+        }
+      }
+    `;
+    document.head.appendChild(styleEl);
+    
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
 
   useEffect(() => {
     // Wait for the DOM to be ready
@@ -456,327 +535,279 @@ const MapSelector: React.FC<MapSelectorProps> = ({
     setManualLng(value === '' ? '' : Number(value));
   };
 
+  // Replace or enhance the map control buttons
+  const mapControlsStyle = {
+    position: 'absolute' as const,
+    top: '10px',
+    right: '10px',
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px'
+  };
+
+  // Add back the theme change detection
+  useEffect(() => {
+    if (prevColorScheme.current !== colorScheme) {
+      setIsThemeTransitioning(true);
+      // Add class to map container for transition animation
+      const mapContainer = document.getElementById('map');
+      if (mapContainer) {
+        mapContainer.classList.add('map-theme-transition');
+        setTimeout(() => {
+          mapContainer.classList.remove('map-theme-transition');
+        }, 600);
+      }
+      const timeout = setTimeout(() => {
+        setIsThemeTransitioning(false);
+      }, 300);
+      prevColorScheme.current = colorScheme;
+      return () => clearTimeout(timeout);
+    }
+  }, [colorScheme]);
+
   return (
-    <>
-      <Paper p="xl" radius="md" withBorder className={isThemeTransitioning ? 'theme-transition' : ''}>
-        <Group gap="md" mb="md">
-          <ThemeIcon size="xl" radius="md" color="blue">
-            <IconMapPin size={24} />
-          </ThemeIcon>
-          <Box>
-            <Title order={2} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              Interactive Map Selection
-            </Title>
-            <Text c="dimmed" size="sm" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              Select a location on the map to calculate magnetic declination
-            </Text>
-          </Box>
-        </Group>
+    <Box style={{ position: 'relative' }}>
+      <Paper
+        shadow="md"
+        radius="md"
+        p="md"
+        style={{ 
+          height: '500px', 
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)'
+        }}
+      >
+        <div id="map" style={{ height: '100%', borderRadius: '8px', transition: 'filter 0.5s ease' }} />
+        
+        <div style={mapControlsStyle}>
+          <ActionIcon
+            variant="filled"
+            color="blue"
+            size="lg"
+            onClick={zoomIn}
+            onMouseEnter={() => setHoveredButton('zoomIn')}
+            onMouseLeave={() => setHoveredButton(null)}
+            style={{
+              transform: hoveredButton === 'zoomIn' ? 'scale(1.1)' : 'scale(1)',
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <IconZoomIn size={20} />
+          </ActionIcon>
+          
+          <ActionIcon
+            variant="filled"
+            color="blue"
+            size="lg"
+            onClick={zoomOut}
+            onMouseEnter={() => setHoveredButton('zoomOut')}
+            onMouseLeave={() => setHoveredButton(null)}
+            style={{
+              transform: hoveredButton === 'zoomOut' ? 'scale(1.1)' : 'scale(1)',
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <IconZoomOut size={20} />
+          </ActionIcon>
+          
+          <ActionIcon
+            variant="filled"
+            color="teal"
+            size="lg"
+            onClick={resetMapView}
+            onMouseEnter={() => setHoveredButton('reset')}
+            onMouseLeave={() => setHoveredButton(null)}
+            style={{
+              transform: hoveredButton === 'reset' ? 'scale(1.1) rotate(45deg)' : 'rotate(0deg)',
+              transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <IconWorld size={20} />
+          </ActionIcon>
+          
+          <ActionIcon
+            variant="filled"
+            color="orange"
+            size="lg"
+            onClick={getCurrentLocation}
+            onMouseEnter={() => setHoveredButton('location')}
+            onMouseLeave={() => setHoveredButton(null)}
+            style={{
+              transform: hoveredButton === 'location' ? 'scale(1.1)' : 'scale(1)',
+              transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <IconCurrentLocation size={20} />
+          </ActionIcon>
+        </div>
+        
+        {isLoading && (
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            zIndex: 1000,
+            borderRadius: '8px',
+            backdropFilter: 'blur(2px)',
+            animation: 'fadeIn 0.3s ease'
+          }}>
+            <Loader size="lg" variant="dots" color="blue" />
+          </div>
+        )}
+      </Paper>
 
-        <Grid mb="md">
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <Card p="0" radius="md" withBorder style={{ overflow: 'hidden' }}>
-              <div style={{ position: 'relative', height: '500px' }}>
-                {/* Add an overlay during theme transition */}
-                {isThemeTransitioning && (
-                  <Box
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: isDark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)',
-                      zIndex: 1000,
-                      pointerEvents: 'none',
-                      animation: 'theme-fade 0.3s ease'
-                    }}
-                  />
-                )}
-                <LoadingOverlay visible={isLoading} zIndex={1000} />
-                <div 
-                  id="map" 
-                  style={{ 
-                    height: '100%', 
-                    width: '100%',
-                    position: 'relative',
-                    zIndex: 1
-                  }} 
-                />
-              </div>
+      <Grid mt="md">
+        <Grid.Col span={{ base: 12, sm: 8 }}>
+          <LocationSearch 
+            onLocationSelected={(lat, lng, displayName) => {
+              onLocationSelected(lat, lng, displayName);
+              
+              // Add animation class to the map container when location changes
+              const mapContainer = document.getElementById('map');
+              if (mapContainer) {
+                mapContainer.classList.add('map-location-change');
+                setTimeout(() => {
+                  mapContainer.classList.remove('map-location-change');
+                }, 500);
+              }
+            }}
+          />
+        </Grid.Col>
+        
+        <Grid.Col span={{ base: 12, sm: 4 }}>
+          <Button 
+            leftSection={<IconCalculator size={16} />}
+            onClick={handleCalculate}
+            loading={isLoading}
+            fullWidth
+            variant="gradient" 
+            gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
+            className="calculate-button"
+            style={{
+              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            <span 
+              style={{ 
+                position: 'relative', 
+                zIndex: 2
+              }}
+            >
+              Calculate Declination
+            </span>
+            <span 
+              className="button-shine-effect" 
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                transform: 'translateX(-100%)',
+                zIndex: 1
+              }}
+            ></span>
+          </Button>
+        </Grid.Col>
+      </Grid>
 
-              {/* Custom map controls with theme-aware styling */}
-              <Box style={{ 
-                position: 'absolute', 
-                top: 10, 
-                right: 10, 
-                zIndex: 9999
-              }}>
-                <Card 
-                  shadow="md" 
-                  p="xs" 
-                  radius="md" 
-                  withBorder
-                  style={{
-                    backgroundColor: isDark ? theme.colors.dark[7] : theme.white,
-                    transition: 'background-color 0.3s ease, box-shadow 0.3s ease'
-                  }}
-                >
-                  <Stack gap="xs">
-                    <Tooltip label="Zoom in" position="top" withArrow withinPortal opened={false}>
-                      <ActionIcon 
-                        color={isDark ? "blue.4" : "blue"} 
-                        size="lg" 
-                        onClick={zoomIn}
-                        variant={isDark ? "light" : "filled"}
-                      >
-                        <IconZoomIn size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Zoom out" position="top" withArrow withinPortal opened={false}>
-                      <ActionIcon 
-                        color={isDark ? "blue.4" : "blue"} 
-                        size="lg" 
-                        onClick={zoomOut}
-                        variant={isDark ? "light" : "filled"}
-                      >
-                        <IconZoomOut size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Use my location" position="top" withArrow withinPortal opened={false}>
-                      <ActionIcon 
-                        color={isDark ? "green.4" : "green"} 
-                        size="lg" 
-                        onClick={getCurrentLocation}
-                        variant={isDark ? "light" : "filled"}
-                      >
-                        <IconCurrentLocation size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label="Reset view" position="top" withArrow withinPortal opened={false}>
-                      <ActionIcon 
-                        color={isDark ? "gray.5" : "gray"} 
-                        size="lg" 
-                        onClick={resetMapView}
-                        variant={isDark ? "light" : "filled"}
-                      >
-                        <IconWorld size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Tooltip label={showOverlay ? "Hide declination overlay" : "Show declination overlay"} position="top" withArrow withinPortal opened={false}>
-                      <ActionIcon 
-                        color={showOverlay ? (isDark ? "blue.4" : "blue") : (isDark ? "gray.5" : "gray")} 
-                        size="lg" 
-                        onClick={() => setShowOverlay(!showOverlay)}
-                        variant={isDark ? "light" : "filled"}
-                      >
-                        <IconCompass size={18} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Stack>
-                </Card>
-              </Box>
-            </Card>
+      <Paper p="md" withBorder mt="md" radius="md" shadow="sm">
+        <Grid align="center">
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Group gap="xs">
+              <ThemeIcon color="blue" size="md" variant="light">
+                <IconMapPin size={16} />
+              </ThemeIcon>
+              <Text fw={500}>Manual Coordinates</Text>
+            </Group>
           </Grid.Col>
           
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <Card withBorder h="100%">
-              <Stack justify="space-between" h="100%">
-                <Box>
-                  <Group gap="xs" mb="sm">
-                    <ThemeIcon size="md" radius="xl" color="blue" variant="light">
-                      <IconTarget size={16} />
-                    </ThemeIcon>
-                    <Text fw={500} size="lg">Location Coordinates</Text>
-                  </Group>
-                  
-                  <Box mb="md">
-                    <LocationSearch onLocationSelected={(lat, lng, displayName) => {
-                      if (mapRef.current) {
-                        mapRef.current.setView([lat, lng], 10);
-                        
-                        // Clean up existing marker first
-                        if (markerRef.current) {
-                          mapRef.current.removeLayer(markerRef.current);
-                        }
-                        
-                        // Create a fresh marker
-                        markerRef.current = L.marker([lat, lng], {
-                          draggable: true,
-                          icon: HighVisibilityIcon,
-                          zIndexOffset: 1000
-                        }).addTo(mapRef.current);
-                        
-                        // Set up marker drag handler
-                        if (markerRef.current) {
-                          markerRef.current.on('dragend', function () {
-                            const marker = markerRef.current;
-                            if (marker) {
-                              const position = marker.getLatLng();
-                              setSelectedCoordinates({
-                                latitude: position.lat,
-                                longitude: position.lng,
-                              });
-                              onLocationSelected(position.lat, position.lng);
-                            }
-                          });
-                        }
-                        
-                        setSelectedCoordinates({
-                          latitude: lat,
-                          longitude: lng,
-                        });
-                        
-                        onLocationSelected(lat, lng, displayName);
-                      }
-                    }} />
-                  </Box>
-                  
-                  <Alert 
-                    color="blue" 
-                    variant="light" 
-                    icon={<IconInfoCircle size={16} />}
-                    mb="md"
-                  >
-                    Click on the map or enter coordinates directly to select a location
-                  </Alert>
-                  
-                  <Grid mb="md">
-                    <Grid.Col span={6}>
-                      <NumberInput
-                        label="Latitude"
-                        description="(-90° to 90°)"
-                        value={manualLat}
-                        onChange={handleLatChange}
-                        decimalScale={6}
-                        min={-90}
-                        max={90}
-                        step={0.0001}
-                      />
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <NumberInput
-                        label="Longitude"
-                        description="(-180° to 180°)"
-                        value={manualLng}
-                        onChange={handleLngChange}
-                        decimalScale={6}
-                        min={-180}
-                        max={180}
-                        step={0.0001}
-                      />
-                    </Grid.Col>
-                  </Grid>
-                  
-                  <Group>
-                    <Button 
-                      leftSection={<IconMapSearch size={16} />}
-                      onClick={handleManualCoordinates}
-                      disabled={typeof manualLat !== 'number' || typeof manualLng !== 'number'}
-                      color="blue"
-                      variant="light"
-                      style={{ flex: 1 }}
-                      title="Go to Location"
-                    >
-                      Set Location
-                    </Button>
-                    <Button 
-                      leftSection={<IconCurrentLocation size={16} />}
-                      onClick={getCurrentLocation}
-                      variant="light"
-                      style={{ flex: 1 }}
-                    >
-                      My Location
-                    </Button>
-                  </Group>
-                </Box>
-                
-                {selectedCoordinates && (
-                  <Box>
-                    <Divider my="md" />
-                    <Group gap="xs" mb="sm">
-                      <ThemeIcon size="md" radius="xl" color="green" variant="light">
-                        <IconMapPin size={16} />
-                      </ThemeIcon>
-                      <Text fw={500}>Selected Location</Text>
-                    </Group>
-                    
-                    <Card bg={theme.colors.gray[0]} p="sm" radius="md" mb="md">
-                      <Text ta="center" fw={500} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {selectedCoordinates.latitude.toFixed(6)}°, {selectedCoordinates.longitude.toFixed(6)}°
-                      </Text>
-                    </Card>
-                    
-                    <Button 
-                      leftSection={<IconCalculator size={16} />}
-                      onClick={handleCalculate}
-                      loading={isLoading}
-                      disabled={!selectedCoordinates}
-                      fullWidth
-                      size="md"
-                      color="green"
-                    >
-                      Calculate Declination
-                    </Button>
-                  </Box>
-                )}
-                
-                {!selectedCoordinates && (
-                  <Box>
-                    <Card p="md" bg={theme.colors.gray[0]} radius="md" withBorder>
-                      <Group justify="center">
-                        <IconTarget size={32} color={theme.colors.gray[6]} />
-                      </Group>
-                      <Text ta="center" c="dimmed" size="sm" mt="xs">
-                        No location selected yet. Click on the map to select a point.
-                      </Text>
-                    </Card>
-                  </Box>
-                )}
-              </Stack>
-            </Card>
+          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+            <NumberInput
+              label="Latitude"
+              placeholder="Enter latitude"
+              decimalScale={6}
+              min={-90}
+              max={90}
+              step={0.000001}
+              value={manualLat}
+              onChange={handleLatChange}
+              rightSection={<Text size="xs">°N</Text>}
+              styles={{
+                wrapper: { 
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:focus-within': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)'
+                  }
+                }
+              }}
+            />
+          </Grid.Col>
+          
+          <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+            <NumberInput
+              label="Longitude"
+              placeholder="Enter longitude"
+              decimalScale={6}
+              min={-180}
+              max={180}
+              step={0.000001}
+              value={manualLng}
+              onChange={handleLngChange}
+              rightSection={<Text size="xs">°E</Text>}
+              styles={{
+                wrapper: { 
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:focus-within': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)'
+                  }
+                }
+              }}
+            />
+          </Grid.Col>
+          
+          <Grid.Col span={{ base: 12, md: 2 }}>
+            <Button
+              onClick={handleManualCoordinates}
+              variant="light"
+              color="blue"
+              fullWidth
+              leftSection={<IconTarget size={16} />}
+              className="set-coords-button"
+            >
+              Set
+            </Button>
           </Grid.Col>
         </Grid>
-        
-        <Text size="xs" ta="right" c="dimmed">
-          Map data © OpenStreetMap contributors
-        </Text>
       </Paper>
-      
-      {isLoading && (
-        <Card withBorder mt="md" p="xl" radius="md">
-          <Group justify="center">
-            <Loader size="md" />
-            <Text>Calculating magnetic declination...</Text>
-          </Group>
-        </Card>
+
+      {mapResult && (
+        <Box mt="xl">
+          <DeclinationResults
+            result={mapResult}
+            isMockData={mapIsMockData}
+            selectedCoordinates={selectedCoordinates}
+          />
+        </Box>
       )}
-      
-      {mapResult && !isLoading && (
-        <Paper shadow="md" radius="md" p="xl" mt="md" withBorder>
-          <Group gap="md" mb="md">
-            <ThemeIcon size="xl" radius="md" color="blue">
-              <IconCompass size={24} />
-            </ThemeIcon>
-            <Box style={{ flex: 1 }}>
-              <Title order={2} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                Declination Results
-              </Title>
-            </Box>
-            <Badge size="lg" color="blue">
-              {new Date().toLocaleDateString()}
-            </Badge>
-          </Group>
-          
-          {mapIsMockData && (
-            <Alert color="yellow" mb="md" icon={<IconInfoCircle size={16} />}>
-              Using simulated data. Could not connect to NOAA API. The values shown are approximations.
-            </Alert>
-          )}
-          <DeclinationResults result={mapResult} />
-        </Paper>
-      )}
-    </>
+    </Box>
   );
 };
 
