@@ -32,6 +32,7 @@ interface AppStateContextType {
   historyCoordinates: Coordinates | null;
   setHistoryCoordinates: (lat: number, lng: number, displayName?: string) => void;
   transferHistoryToMap: () => void;
+  transferMapToHistory: () => void;
   
   // Batch coordinates and results
   batchCoordinates: Coordinates | null;
@@ -146,6 +147,74 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     showToast(`Switched to ${value} tab`, 'info');
   };
   
+  // Function to transfer coordinates from map to history
+  const transferMapToHistory = (): void => {
+    if (mapCoordinates) {
+      setHistoryCoordinates(
+        mapCoordinates.latitude,
+        mapCoordinates.longitude
+      );
+      showToast('Coordinates transferred from map to history', 'success');
+    } else {
+      showToast('No coordinates to transfer from map', 'warning');
+    }
+  };
+
+  // Function to automatically share coordinates when switching tabs
+  const smartTabChange = (newTab: string): void => {
+    const currentCoords = getCurrentTabCoordinates();
+    const targetHasCoords = getTargetTabCoordinates(newTab);
+    
+    // If switching to a tab that has no coordinates, but current tab has coordinates, transfer them
+    if (currentCoords && !targetHasCoords) {
+      transferCoordinatesToTab(currentCoords, newTab);
+      showToast(`Coordinates automatically transferred to ${newTab} tab`, 'success');
+    }
+    
+    setActiveTab(newTab);
+    showToast(`Switched to ${newTab} tab`, 'info');
+  };
+
+  // Helper function to get coordinates from current active tab
+  const getCurrentTabCoordinates = () => {
+    switch (activeTab) {
+      case 'form': return formCoordinates;
+      case 'map': return mapCoordinates;
+      case 'history': return historyCoordinates;
+      case 'batch': return batchCoordinates;
+      default: return null;
+    }
+  };
+
+  // Helper function to get coordinates from target tab
+  const getTargetTabCoordinates = (tab: string) => {
+    switch (tab) {
+      case 'form': return formCoordinates;
+      case 'map': return mapCoordinates;
+      case 'history': return historyCoordinates;
+      case 'batch': return batchCoordinates;
+      default: return null;
+    }
+  };
+
+  // Helper function to transfer coordinates to a specific tab
+  const transferCoordinatesToTab = (coords: { latitude: number; longitude: number }, tab: string) => {
+    switch (tab) {
+      case 'form':
+        setFormCoordinates(coords.latitude, coords.longitude);
+        break;
+      case 'map':
+        setMapCoordinates(coords.latitude, coords.longitude);
+        break;
+      case 'history':
+        setHistoryCoordinates(coords.latitude, coords.longitude);
+        break;
+      case 'batch':
+        setBatchCoordinates(coords.latitude, coords.longitude);
+        break;
+    }
+  };
+  
   // Function to transfer history coordinates to map
   const transferHistoryToMap = (): void => {
     console.log('transferHistoryToMap called');
@@ -192,7 +261,7 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
   
   const value: AppStateContextType = {
     activeTab,
-    setActiveTab,
+    setActiveTab: smartTabChange, // Use smart tab change instead of direct setActiveTab
     
     formCoordinates,
     setFormCoordinates,
@@ -207,6 +276,7 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     historyCoordinates,
     setHistoryCoordinates,
     transferHistoryToMap,
+    transferMapToHistory,
     
     batchCoordinates,
     setBatchCoordinates,

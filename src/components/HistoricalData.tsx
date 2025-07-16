@@ -50,6 +50,7 @@ export interface HistoricalDataProps {
   selectedCoordinates: { latitude: number; longitude: number } | null;
   onLocationSelected: (lat: number, lng: number) => void;
   onTransferToMap?: () => void;
+  onTransferFromMap?: () => void;
 }
 
 interface DataPoint {
@@ -57,7 +58,7 @@ interface DataPoint {
   declination: number;
 }
 
-export function HistoricalData({ selectedCoordinates, onLocationSelected, onTransferToMap }: HistoricalDataProps) {
+export function HistoricalData({ selectedCoordinates, onLocationSelected, onTransferToMap, onTransferFromMap }: HistoricalDataProps) {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const { setActiveTab } = useAppState();
@@ -246,14 +247,25 @@ export function HistoricalData({ selectedCoordinates, onLocationSelected, onTran
             ) : (
               <Alert color="yellow" icon={<IconInfoCircle size={16} />}>
                 <Text>No location selected. Please select a location from the Map tab first.</Text>
-                <Button 
-                  mt="sm"
-                  variant="light" 
-                  leftSection={<IconMap size={16} />}
-                  onClick={handleGoToMap}
-                >
-                  Go to Map
-                </Button>
+                <Group mt="sm" gap="xs">
+                  <Button 
+                    variant="light" 
+                    leftSection={<IconMap size={16} />}
+                    onClick={handleGoToMap}
+                  >
+                    Go to Map
+                  </Button>
+                  {onTransferFromMap && (
+                    <Button 
+                      variant="light" 
+                      color="blue"
+                      leftSection={<IconTransferIn size={16} />}
+                      onClick={onTransferFromMap}
+                    >
+                      Transfer from Map
+                    </Button>
+                  )}
+                </Group>
               </Alert>
             )}
           </Card>

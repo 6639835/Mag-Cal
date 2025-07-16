@@ -250,10 +250,18 @@ const MapSelector: React.FC<MapSelectorProps> = ({
       const defaultLat = initialLatitude || 40.7128;
       const defaultLng = initialLongitude || -74.006;
 
-      // If map already exists, just update its view without changing zoom
+      // If map already exists, only update view if we have initial coordinates and they're different
       if (mapRef.current) {
-        const currentZoom = mapRef.current.getZoom();
-        mapRef.current.setView([defaultLat, defaultLng], currentZoom);
+        if (initialLatitude && initialLongitude) {
+          const currentCenter = mapRef.current.getCenter();
+          // Only update view if the initial coordinates are significantly different from current center
+          const distanceThreshold = 0.01; // about 1km
+          if (Math.abs(currentCenter.lat - initialLatitude) > distanceThreshold ||
+              Math.abs(currentCenter.lng - initialLongitude) > distanceThreshold) {
+            const currentZoom = mapRef.current.getZoom();
+            mapRef.current.setView([initialLatitude, initialLongitude], Math.max(currentZoom, 8));
+          }
+        }
       } else {
         // Only create a new map if one doesn't exist
         const map = L.map('map', {
@@ -269,49 +277,9 @@ const MapSelector: React.FC<MapSelectorProps> = ({
         }).addTo(map);
 
         mapRef.current = map;
-      }
-
-      // Clear any existing markers first
-      if (markerRef.current && mapRef.current) {
-        mapRef.current.removeLayer(markerRef.current);
-        markerRef.current = null;
-      }
-
-      if (initialLatitude && initialLongitude && mapRef.current) {
-        // Always create a new marker to ensure it's visible
-        markerRef.current = L.marker([initialLatitude, initialLongitude], {
-          draggable: true,
-          icon: HighVisibilityIcon, // Use high visibility icon
-          zIndexOffset: 1000 // Ensure marker is above other elements
-        }).addTo(mapRef.current);
         
-        markerRef.current.on('dragend', function () {
-          const marker = markerRef.current;
-          if (marker) {
-            const position = marker.getLatLng();
-            setSelectedCoordinates({
-              latitude: position.lat,
-              longitude: position.lng,
-            });
-            onLocationSelected(position.lat, position.lng);
-          }
-        });
-        
-        setSelectedCoordinates({
-          latitude: initialLatitude,
-          longitude: initialLongitude,
-        });
-
-        // Debug marker visibility
-        console.log('Initial marker added:', markerRef.current);
-      }
-
-      // Ensure we register the click handler on the current map instance
-      if (mapRef.current) {
-        // Remove any existing click handlers to prevent duplicates
-        mapRef.current.off('click');
-        
-        mapRef.current.on('click', function(e: L.LeafletMouseEvent) {
+        // Set up click handler only once when map is created
+        map.on('click', function(e: L.LeafletMouseEvent) {
           const { lat, lng } = e.latlng;
 
           // Clean up any existing marker
@@ -354,19 +322,61 @@ const MapSelector: React.FC<MapSelectorProps> = ({
           onLocationSelected(lat, lng, `${lat.toFixed(6)}, ${lng.toFixed(6)}`);
         });
       }
+
+      // Handle marker updates when initial coordinates are provided
+      if (initialLatitude && initialLongitude && mapRef.current) {
+        // Clear any existing markers first
+        if (markerRef.current) {
+          mapRef.current.removeLayer(markerRef.current);
+          markerRef.current = null;
+        }
+
+        // Always create a new marker to ensure it's visible
+        markerRef.current = L.marker([initialLatitude, initialLongitude], {
+          draggable: true,
+          icon: HighVisibilityIcon, // Use high visibility icon
+          zIndexOffset: 1000 // Ensure marker is above other elements
+        }).addTo(mapRef.current);
+        
+        markerRef.current.on('dragend', function () {
+          const marker = markerRef.current;
+          if (marker) {
+            const position = marker.getLatLng();
+            setSelectedCoordinates({
+              latitude: position.lat,
+              longitude: position.lng,
+            });
+            onLocationSelected(position.lat, position.lng);
+          }
+        });
+        
+        setSelectedCoordinates({
+          latitude: initialLatitude,
+          longitude: initialLongitude,
+        });
+
+        // Debug marker visibility
+        console.log('Initial marker added:', markerRef.current);
+      }
     };
 
     // Initialize map after a short delay to ensure DOM is ready
-    const timer = setTimeout(initMap, 200); // Increased timeout for better DOM readiness
+    const timer = setTimeout(initMap, 200);
 
     return () => {
       clearTimeout(timer);
+    };
+  }, [initialLatitude, initialLongitude]);
+
+  // Separate effect to handle map cleanup on unmount
+  useEffect(() => {
+    return () => {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
-  }, [initialLatitude, initialLongitude, onLocationSelected]);
+  }, []);
 
   const handleCalculate = async () => {
     if (!selectedCoordinates || !onCalculate || !setLoading) return;

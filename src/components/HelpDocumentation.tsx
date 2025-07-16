@@ -1,8 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Paper, Title, Accordion, Text, List, Group, Badge, Divider, Button, Anchor, Stack, Box } from '@mantine/core';
-import { IconHelp, IconForms, IconMap, IconStar, IconCalculator, IconChartLine, IconShare, IconInfoCircle } from '@tabler/icons-react';
+import { IconHelp, IconForms, IconMap, IconStar, IconCalculator, IconChartLine, IconShare, IconInfoCircle, IconScale } from '@tabler/icons-react';
 
 const HelpDocumentation: React.FC = () => {
+  const [accordionValue, setAccordionValue] = useState<string | null>(null);
+
+  const handleTermsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setAccordionValue('terms-of-use');
+    // Scroll to terms section after a brief delay to allow accordion to open
+    setTimeout(() => {
+      const termsElement = document.querySelector('[data-accordion-control="terms-of-use"]');
+      if (termsElement) {
+        termsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   return (
     <Paper p="lg" radius="md" withBorder shadow="sm" style={{ maxHeight: '80vh', overflow: 'auto' }}>
       <Stack gap="md">
@@ -20,7 +34,7 @@ const HelpDocumentation: React.FC = () => {
         
         <Divider label="Main Features" labelPosition="center" />
         
-        <Accordion variant="contained">
+        <Accordion variant="contained" value={accordionValue} onChange={setAccordionValue}>
           <Accordion.Item value="form-tab">
             <Accordion.Control icon={<IconForms size={18} />}>
               Form Input
@@ -238,6 +252,93 @@ const HelpDocumentation: React.FC = () => {
               </List>
             </Accordion.Panel>
           </Accordion.Item>
+          
+          <Accordion.Item value="terms-of-use">
+            <Accordion.Control icon={<IconScale size={18} />}>
+              Terms of Use
+            </Accordion.Control>
+            <Accordion.Panel>
+              <Stack gap="md">
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Acceptance of Terms</Text>
+                  <Text size="sm" c="dimmed">
+                    By using this Magnetic Declination Calculator application, you agree to comply with and be bound by the following terms and conditions of use.
+                  </Text>
+                </Box>
+                
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Educational and Informational Use</Text>
+                  <Text size="sm" c="dimmed" mb="xs">
+                    This application is designed for educational, research, and general informational purposes. The magnetic declination calculations are based on scientific models and should be considered estimates.
+                  </Text>
+                  <List size="sm" spacing="xs">
+                    <List.Item>Use for educational and research purposes is encouraged</List.Item>
+                    <List.Item>Results are based on the World Magnetic Model (WMM)</List.Item>
+                    <List.Item>Calculations may have inherent uncertainties</List.Item>
+                  </List>
+                </Box>
+                
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Limitations and Disclaimers</Text>
+                  <List size="sm" spacing="xs">
+                    <List.Item><strong>Not for Critical Navigation:</strong> Do not use for critical navigation, aviation, marine navigation, or life-safety applications</List.Item>
+                    <List.Item><strong>Accuracy:</strong> While based on scientific models, results may contain errors or uncertainties</List.Item>
+                    <List.Item><strong>Professional Use:</strong> For professional or commercial applications, verify results with official sources</List.Item>
+                    <List.Item><strong>Future Predictions:</strong> Calculations for future dates have increased uncertainty</List.Item>
+                  </List>
+                </Box>
+                
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Data Privacy</Text>
+                  <List size="sm" spacing="xs">
+                    <List.Item>Location data entered is processed locally in your browser</List.Item>
+                    <List.Item>Favorite locations are stored locally on your device</List.Item>
+                    <List.Item>No personal data is transmitted to external servers without your consent</List.Item>
+                    <List.Item>Sharing functionality creates shareable links with coordinate data</List.Item>
+                  </List>
+                </Box>
+                
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Intellectual Property</Text>
+                  <Text size="sm" c="dimmed" mb="xs">
+                    This application utilizes the World Magnetic Model (WMM) which is developed by NOAA's National Centers for Environmental Information and the British Geological Survey.
+                  </Text>
+                  <List size="sm" spacing="xs">
+                    <List.Item>Application code and interface are provided as-is</List.Item>
+                    <List.Item>Magnetic field models are public domain scientific data</List.Item>
+                    <List.Item>Icons and UI components may have their own licenses</List.Item>
+                  </List>
+                </Box>
+                
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Limitation of Liability</Text>
+                  <Text size="sm" c="dimmed">
+                    The developers and providers of this application shall not be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use of this application or reliance on its calculations.
+                  </Text>
+                </Box>
+                
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Updates and Modifications</Text>
+                  <Text size="sm" c="dimmed">
+                    These terms may be updated periodically. Continued use of the application constitutes acceptance of any modifications to these terms.
+                  </Text>
+                </Box>
+                
+                <Box>
+                  <Text size="sm" fw={500} mb="xs">Contact and Support</Text>
+                  <Text size="sm" c="dimmed">
+                    For questions about this application or to report issues, please use the application's built-in feedback mechanisms or contact the development team through appropriate channels.
+                  </Text>
+                </Box>
+                
+                <Divider />
+                
+                <Text size="xs" c="dimmed" style={{ fontStyle: 'italic' }}>
+                  Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </Text>
+              </Stack>
+            </Accordion.Panel>
+          </Accordion.Item>
         </Accordion>
         
         <Divider my="md" />
@@ -245,7 +346,6 @@ const HelpDocumentation: React.FC = () => {
         <Box>
           <Group justify="space-between">
             <Text size="sm" c="dimmed">Version 0.1.0</Text>
-            <Anchor size="sm" href="#" target="_blank">Terms of Use</Anchor>
           </Group>
         </Box>
       </Stack>

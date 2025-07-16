@@ -35,6 +35,7 @@ function AppContent() {
     historyCoordinates,
     setHistoryCoordinates,
     transferHistoryToMap,
+    transferMapToHistory,
     
     batchCoordinates,
     setBatchCoordinates,
@@ -152,6 +153,7 @@ function AppContent() {
               selectedCoordinates={historyCoordinates}
               onLocationSelected={(lat, lng) => setHistoryCoordinates(lat, lng)}
               onTransferToMap={transferHistoryToMap}
+              onTransferFromMap={transferMapToHistory}
             />
           </Tabs.Panel>
         </Tabs>
