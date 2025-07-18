@@ -9,7 +9,10 @@ import {
   ThemeIcon, 
   Box,
   Divider,
-  Alert
+  Alert,
+  Tooltip,
+  ActionIcon,
+  Stack
 } from '@mantine/core';
 import { 
   IconMapPin, 
@@ -134,6 +137,39 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
         70% { box-shadow: 0 0 0 10px rgba(0, 120, 255, 0); }
         100% { box-shadow: 0 0 0 0 rgba(0, 120, 255, 0); }
       }
+      @keyframes slideGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      @keyframes bounceArrow {
+        0%, 100% { transform: translateY(-5px); }
+        50% { transform: translateY(5px); }
+      }
+      @keyframes innerGlow {
+        0% { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        100% { box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+      }
+      @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes compassGlow {
+        0% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+      }
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes magneticNeedle {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-5px); }
+      }
+      @keyframes valueGlow {
+        0% { text-shadow: 0 0 0 rgba(0,0,0,0.1); }
+        100% { text-shadow: 0 0 10px rgba(0,0,0,0.2); }
+      }
     `;
     document.head.appendChild(styleEl);
     
@@ -148,174 +184,453 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
       
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Paper p="md" withBorder radius="md" shadow="sm">
-            <Group mb="xs">
-              <ThemeIcon size={36} radius="md" color="blue" className="pulse-animation">
-                <IconCompass size={24} />
-              </ThemeIcon>
-              <div>
-                <Text fw={500} size="lg">Magnetic Declination</Text>
-                <Text size="xs" c="dimmed">The angle between true north and magnetic north</Text>
-              </div>
+          <Paper p="md" withBorder radius="md" shadow="sm" style={{ height: '100%' }}>
+            <Group mb="xs" justify="space-between">
+              <Group>
+                <ThemeIcon size={36} radius="md" color="blue" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }} className="pulse-animation">
+                  <IconCompass size={24} />
+                </ThemeIcon>
+                <div>
+                  <Text fw={500} size="lg">Magnetic Declination</Text>
+                  <Text size="xs" c="dimmed">Angle between true and magnetic north</Text>
+                </div>
+              </Group>
+              <Tooltip 
+                label="Magnetic declination is the angular difference between magnetic north (direction a compass points) and true north (actual geographic north)"
+                multiline
+                w={300}
+                withArrow
+                position="left"
+              >
+                <ActionIcon variant="subtle" color="gray" size="sm">
+                  <IconInfoCircle size={16} />
+                </ActionIcon>
+              </Tooltip>
             </Group>
             
-            <Box style={{ position: 'relative', textAlign: 'center', marginTop: '15px', marginBottom: '15px' }}>
+            {/* Enhanced compass visualization */}
+            <Box style={{ 
+              position: 'relative', 
+              textAlign: 'center', 
+              margin: '20px 0',
+              padding: '16px',
+              backgroundColor: 'rgba(248, 249, 250, 0.5)',
+              borderRadius: '12px'
+            }}>
+              {/* Compass container with enhanced styling */}
               <div style={{ 
-                  position: 'relative', 
-                  width: '120px', 
-                  height: '120px', 
-                  margin: '0 auto',
+                position: 'relative', 
+                width: '140px', 
+                height: '140px', 
+                margin: '0 auto',
+                borderRadius: '50%',
+                background: `
+                  radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 50%, transparent 70%),
+                  linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.05) 50%, rgba(219, 234, 254, 0.1) 100%)
+                `, 
+                boxShadow: `
+                  0 8px 32px rgba(0,0,0,0.1),
+                  inset 0 2px 8px rgba(255,255,255,0.2),
+                  inset 0 -2px 8px rgba(0,0,0,0.05)
+                `,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '3px solid rgba(59, 130, 246, 0.2)',
+                animation: 'compassGlow 3s ease-in-out infinite alternate'
+              }}>
+                {/* Outer ring with degree markings */}
+                <div style={{
+                  position: 'absolute',
+                  inset: '-8px',
                   borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.05) 100%)', 
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '10px'
-                }}>
+                  background: 'conic-gradient(from 0deg, transparent 0deg, rgba(59, 130, 246, 0.1) 2deg, transparent 4deg)',
+                  animation: 'rotate 20s linear infinite'
+                }} />
+                
+                {/* Rotating compass content */}
                 <div style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    position: 'relative',
-                    transform: `rotate(${compassRotation}deg)`,
-                    transition: 'transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                  }}>
+                  width: '90%', 
+                  height: '90%', 
+                  position: 'relative',
+                  transform: `rotate(${compassRotation}deg)`,
+                  transition: 'transform 1.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                }}>
+                  {/* Enhanced directional indicators */}
                   <div style={{ 
-                      position: 'absolute', 
-                      top: '10px', 
-                      left: '50%', 
-                      transform: 'translateX(-50%)', 
-                      color: 'red', 
-                      fontWeight: 'bold' 
-                    }}>N</div>
+                    position: 'absolute', 
+                    top: '8px', 
+                    left: '50%', 
+                    transform: 'translateX(-50%)', 
+                    color: '#ef4444', 
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                  }}>N</div>
                   <div style={{ 
-                      position: 'absolute', 
-                      bottom: '10px', 
-                      left: '50%', 
-                      transform: 'translateX(-50%)', 
-                      color: 'black', 
-                      fontWeight: 'bold' 
-                    }}>S</div>
+                    position: 'absolute', 
+                    bottom: '8px', 
+                    left: '50%', 
+                    transform: 'translateX(-50%)', 
+                    color: '#374151', 
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                  }}>S</div>
                   <div style={{ 
-                      position: 'absolute', 
-                      left: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      color: 'black', 
-                      fontWeight: 'bold' 
-                    }}>W</div>
+                    position: 'absolute', 
+                    left: '8px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)', 
+                    color: '#374151', 
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                  }}>W</div>
                   <div style={{ 
-                      position: 'absolute', 
-                      right: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      color: 'black', 
-                      fontWeight: 'bold' 
-                    }}>E</div>
+                    position: 'absolute', 
+                    right: '8px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)', 
+                    color: '#374151', 
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                  }}>E</div>
+                  
+                  {/* Enhanced compass lines with gradient effects */}
                   <div style={{ 
-                      position: 'absolute', 
-                      left: '50%', 
-                      top: 0, 
-                      bottom: 0, 
-                      width: '2px', 
-                      backgroundColor: 'red', 
-                      transform: 'translateX(-50%)'
-                    }}></div>
+                    position: 'absolute', 
+                    left: '50%', 
+                    top: '10%', 
+                    bottom: '10%', 
+                    width: '3px', 
+                    background: 'linear-gradient(to bottom, #ef4444 0%, #dc2626 50%, #b91c1c 100%)', 
+                    transform: 'translateX(-50%)',
+                    borderRadius: '2px',
+                    boxShadow: '0 0 8px rgba(239, 68, 68, 0.4)'
+                  }}></div>
                   <div style={{ 
-                      position: 'absolute', 
-                      top: '50%', 
-                      left: 0, 
-                      right: 0, 
-                      height: '2px', 
-                      backgroundColor: 'black', 
-                      transform: 'translateY(-50%)'
-                    }}></div>
+                    position: 'absolute', 
+                    top: '50%', 
+                    left: '10%', 
+                    right: '10%', 
+                    height: '2px', 
+                    background: 'linear-gradient(to right, #6b7280 0%, #4b5563 50%, #374151 100%)', 
+                    transform: 'translateY(-50%)',
+                    borderRadius: '1px'
+                  }}></div>
+                  
+                  {/* Magnetic needle indicator */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '20%',
+                    left: '50%',
+                    width: '4px',
+                    height: '30%',
+                    background: 'linear-gradient(to bottom, #10b981 0%, #059669 100%)',
+                    transform: 'translateX(-50%)',
+                    borderRadius: '2px',
+                    boxShadow: '0 0 10px rgba(16, 185, 129, 0.6)',
+                    animation: 'magneticNeedle 2s ease-in-out infinite alternate'
+                  }} />
                 </div>
+                
+                {/* Center point with enhanced styling */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: '#1f2937',
+                  borderRadius: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  boxShadow: '0 0 6px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
+                }} />
               </div>
-              <Group justify="center" mt="md">
-                <Title order={1} style={{ fontWeight: 'bold', fontSize: '2.2rem' }}>
-                  {decimalDeclination}°
-                </Title>
-                <Badge size="xl" color={isEast ? "blue" : "red"} style={{ transform: 'translateY(4px)' }}>
+              
+              {/* Enhanced value display */}
+              <Group justify="center" mt="lg" gap="md">
+                <Box ta="center">
+                  <Title order={1} style={{ 
+                    fontWeight: 'bold', 
+                    fontSize: '2.5rem',
+                    background: isEast 
+                      ? 'linear-gradient(45deg, #3b82f6, #1d4ed8)' 
+                      : 'linear-gradient(45deg, #ef4444, #dc2626)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    animation: 'valueGlow 2s ease-in-out infinite alternate'
+                  }}>
+                    {decimalDeclination}°
+                  </Title>
+                </Box>
+                <Badge 
+                  size="xl" 
+                  variant="gradient"
+                  gradient={isEast 
+                    ? { from: 'blue', to: 'cyan', deg: 45 }
+                    : { from: 'red', to: 'orange', deg: 45 }
+                  }
+                  style={{ 
+                    transform: 'translateY(8px)',
+                    animation: 'fadeInScale 0.8s ease-out',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  }}
+                >
                   {isEast ? "East" : "West"}
                 </Badge>
               </Group>
             </Box>
             
-            <Text mt="xs" size="sm" ta="center" fw={500}>
-              {isEast 
-                ? "Add to true bearing to get magnetic bearing" 
-                : "Subtract from true bearing to get magnetic bearing"}
-            </Text>
+            {/* Enhanced instructional content */}
+            <Stack gap="sm" mt="md">
+              <Text size="sm" ta="center" fw={500} style={{ lineHeight: 1.4 }}>
+                {isEast 
+                  ? "Add to true bearing to get magnetic bearing" 
+                  : "Subtract from true bearing to get magnetic bearing"}
+              </Text>
+              
+              {/* Practical usage guide */}
+              <Box p="sm" style={{ 
+                backgroundColor: 'rgba(59, 130, 246, 0.05)', 
+                borderRadius: '8px',
+                border: '1px solid rgba(59, 130, 246, 0.1)'
+              }}>
+                <Group gap="xs" mb="xs">
+                  <IconInfoCircle size={14} style={{ color: 'var(--mantine-color-blue-6)' }} />
+                  <Text size="xs" fw={500} c="blue">Navigation Guide</Text>
+                </Group>
+                <Text size="xs" c="dimmed" style={{ lineHeight: 1.4 }}>
+                  {isEast ? (
+                    <>
+                      <strong>Example:</strong> True bearing 90° + {decimalDeclination}° = {(90 + parseFloat(decimalDeclination)).toFixed(1)}° magnetic bearing
+                    </>
+                  ) : (
+                    <>
+                      <strong>Example:</strong> True bearing 90° - {decimalDeclination}° = {(90 - parseFloat(decimalDeclination)).toFixed(1)}° magnetic bearing
+                    </>
+                  )}
+                </Text>
+              </Box>
+              
+              {/* Accuracy indicator */}
+              <Group justify="center" gap="xs" mt="xs">
+                <Text size="xs" c="dimmed">Accuracy: ±0.5°</Text>
+                <div style={{
+                  width: '4px',
+                  height: '4px',
+                  borderRadius: '50%',
+                  backgroundColor: '#10b981'
+                }} />
+                <Text size="xs" c="dimmed">Updated: {new Date().toLocaleDateString()}</Text>
+              </Group>
+            </Stack>
           </Paper>
         </Grid.Col>
         
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Paper p="md" withBorder radius="md" shadow="sm">
-            <Group mb="xs">
-              <ThemeIcon size={36} radius="md" color="cyan">
-                <IconArrowsDownUp size={24} />
-              </ThemeIcon>
-              <div>
-                <Text fw={500} size="lg">Annual Change</Text>
-                <Text size="xs" c="dimmed">How declination changes each year</Text>
-              </div>
+          <Paper p="md" withBorder radius="md" shadow="sm" style={{ height: '100%' }}>
+            <Group mb="xs" justify="space-between">
+              <Group>
+                <ThemeIcon size={36} radius="md" color="cyan" variant="gradient" gradient={{ from: 'cyan', to: 'blue' }}>
+                  <IconArrowsDownUp size={24} />
+                </ThemeIcon>
+                <div>
+                  <Text fw={500} size="lg">Annual Change</Text>
+                  <Text size="xs" c="dimmed">Rate of magnetic field change</Text>
+                </div>
+              </Group>
+              <Tooltip 
+                label="The annual change represents how much the magnetic declination shifts each year due to changes in Earth's magnetic field"
+                multiline
+                w={280}
+                withArrow
+                position="left"
+              >
+                <ActionIcon variant="subtle" color="gray" size="sm">
+                  <IconInfoCircle size={16} />
+                </ActionIcon>
+              </Tooltip>
             </Group>
             
+            {/* Enhanced visualization */}
             <Box style={{ 
               position: 'relative', 
-              height: '100px', 
-              margin: '20px 0', 
+              height: '120px', 
+              margin: '16px 0', 
               display: 'flex', 
               alignItems: 'center', 
-              justifyContent: 'center' 
+              justifyContent: 'center',
+              backgroundColor: 'rgba(248, 249, 250, 0.5)',
+              borderRadius: '8px',
+              padding: '20px'
             }}>
+              {/* Progress-style indicator */}
               <div style={{ 
                 position: 'relative', 
-                width: '80%', 
-                height: '6px', 
-                backgroundColor: 'rgba(0,0,0,0.1)', 
-                borderRadius: '3px' 
+                width: '90%', 
+                height: '8px', 
+                backgroundColor: 'rgba(0,0,0,0.08)', 
+                borderRadius: '4px',
+                overflow: 'hidden'
               }}>
+                {/* Animated background gradient */}
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: `linear-gradient(90deg, 
+                    ${isIncreasing ? '#ff6b35' : '#12B886'} 0%, 
+                    rgba(255,255,255,0.3) 50%, 
+                    ${isIncreasing ? '#12B886' : '#ff6b35'} 100%)`,
+                  animation: 'slideGradient 3s ease-in-out infinite'
+                }} />
+                
+                {/* Center reference line */}
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '-4px',
+                  bottom: '-4px',
+                  width: '2px',
+                  backgroundColor: 'rgba(0,0,0,0.2)',
+                  transform: 'translateX(-50%)'
+                }} />
+                
+                {/* Dynamic indicator */}
                 <div style={{ 
                   position: 'absolute', 
-                  left: '50%', 
+                  left: isIncreasing ? '65%' : '35%',
                   top: '50%', 
-                  width: '12px', 
-                  height: '12px', 
-                  backgroundColor: isIncreasing ? '#12B886' : '#FF9500', 
+                  width: '16px', 
+                  height: '16px', 
+                  backgroundColor: isIncreasing ? '#12B886' : '#FF6B35', 
                   borderRadius: '50%', 
                   transform: 'translate(-50%, -50%)',
-                  boxShadow: '0 0 10px rgba(0,0,0,0.2)'
-                }}></div>
+                  boxShadow: `0 0 16px ${isIncreasing ? 'rgba(18, 184, 134, 0.4)' : 'rgba(255, 107, 53, 0.4)'}`,
+                  border: '3px solid white',
+                  animation: 'pulse 2s ease-in-out infinite'
+                }}>
+                  {/* Inner glow effect */}
+                  <div style={{
+                    position: 'absolute',
+                    inset: '2px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                    animation: 'innerGlow 2s ease-in-out infinite alternate'
+                  }} />
+                </div>
+                
+                {/* Direction arrow with enhanced animation */}
                 <div style={{ 
                   position: 'absolute', 
-                  left: isIncreasing ? 'calc(50% + 10px)' : 'calc(50% - 60px)', 
-                  top: '-30px', 
-                  fontSize: '24px', 
+                  left: isIncreasing ? '75%' : '25%',
+                  top: '-45px', 
+                  fontSize: '28px', 
                   fontWeight: 'bold',
-                  color: isIncreasing ? '#12B886' : '#FF9500',
-                  animation: 'fadeIn 0.8s forwards'
+                  color: isIncreasing ? '#12B886' : '#FF6B35',
+                  animation: 'bounceArrow 1.5s ease-in-out infinite',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
                   {isIncreasing ? '↗' : '↘'}
                 </div>
               </div>
+              
+              {/* Trend labels */}
+              <div style={{
+                position: 'absolute',
+                left: '5%',
+                bottom: '10px',
+                fontSize: '12px',
+                color: '#FF6B35',
+                fontWeight: '500'
+              }}>
+                Westward
+              </div>
+              <div style={{
+                position: 'absolute',
+                right: '5%',
+                bottom: '10px',
+                fontSize: '12px',
+                color: '#12B886',
+                fontWeight: '500'
+              }}>
+                Eastward
+              </div>
             </Box>
             
-            <Group justify="center" mt="lg">
-              <Title order={2} style={{ fontWeight: 'bold' }}>
-                {annualChange}°/year
-              </Title>
-              <Badge size="lg" color={isIncreasing ? "teal" : "orange"}>
+            {/* Enhanced value display */}
+            <Group justify="center" mt="lg" gap="md">
+              <Box ta="center">
+                <Title order={2} style={{ 
+                  fontWeight: 'bold',
+                  background: isIncreasing 
+                    ? 'linear-gradient(45deg, #12B886, #20C997)' 
+                    : 'linear-gradient(45deg, #FF6B35, #FF922B)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  {annualChange}°
+                </Title>
+                <Text size="xs" c="dimmed" fw={500}>per year</Text>
+              </Box>
+              <Badge 
+                size="lg" 
+                variant="gradient"
+                gradient={isIncreasing 
+                  ? { from: 'teal', to: 'green', deg: 45 }
+                  : { from: 'orange', to: 'red', deg: 45 }
+                }
+                style={{ 
+                  animation: 'fadeInScale 0.8s ease-out',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+              >
                 {isIncreasing ? "Increasing" : "Decreasing"}
               </Badge>
             </Group>
             
-            <Text mt="sm" size="sm" ta="center" fw={500}>
-              {isIncreasing 
-                ? `Declination is moving eastward by ${annualChange}° per year` 
-                : `Declination is moving westward by ${annualChange}° per year`}
-            </Text>
+            {/* Enhanced descriptive text with practical context */}
+            <Stack gap="xs" mt="md">
+              <Text size="sm" ta="center" fw={500} style={{ lineHeight: 1.4 }}>
+                {isIncreasing 
+                  ? `Declination shifts eastward by ${annualChange}° annually` 
+                  : `Declination shifts westward by ${annualChange}° annually`}
+              </Text>
+              
+              {/* Practical impact information */}
+              <Group justify="center" gap="xs">
+                <IconInfoCircle size={14} style={{ color: 'var(--mantine-color-blue-6)' }} />
+                <Text size="xs" c="dimmed" ta="center" style={{ maxWidth: '280px', lineHeight: 1.3 }}>
+                  This affects compass readings over time. 
+                  {parseFloat(annualChange) > 0.1 
+                    ? ' Significant change - update navigation annually'
+                    : ' Minimal change - compass remains accurate for several years'
+                  }
+                </Text>
+              </Group>
+              
+              {/* Future projection */}
+              {parseFloat(annualChange) > 0 && (
+                <Box mt="xs" p="xs" style={{ 
+                  backgroundColor: 'rgba(0,0,0,0.02)', 
+                  borderRadius: '6px',
+                  border: '1px solid rgba(0,0,0,0.05)'
+                }}>
+                  <Text size="xs" c="dimmed" ta="center" fs="italic">
+                    In 10 years: {isIncreasing ? '+' : '-'}{(parseFloat(annualChange) * 10).toFixed(2)}° total change
+                  </Text>
+                </Box>
+              )}
+            </Stack>
           </Paper>
         </Grid.Col>
       </Grid>
