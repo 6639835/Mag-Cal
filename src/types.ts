@@ -15,6 +15,11 @@ export interface DeclinationParams {
   date?: Date;
 }
 
+interface MagneticComponent {
+  value: number;
+  unit: string;
+}
+
 /**
  * Result of magnetic declination calculation
  */
@@ -29,17 +34,22 @@ export interface Result {
   elevation: number;
   
   /** Date of calculation */
-  date: Date;
+  date: string;
   
-  /** Magnetic declination in degrees (positive for east, negative for west) */
-  declination: number;
+  /** Magnetic declination (positive for east, negative for west) */
+  declination: MagneticComponent;
   
-  /** Annual change in declination (secular variation) in degrees/year */
-  declination_sv: number;
+  /** Annual change in declination (secular variation) */
+  declination_sv: MagneticComponent;
   
   /** Name of the geomagnetic model used */
   model: string;
   
-  /** Year of the geomagnetic model */
-  model_year: number;
+  // Optional magnetic components
+  inclination?: MagneticComponent;
+  totalIntensity?: MagneticComponent;
+  horizontalIntensity?: MagneticComponent;
+  northComponent?: MagneticComponent;
+  eastComponent?: MagneticComponent;
+  verticalComponent?: MagneticComponent;
 } 

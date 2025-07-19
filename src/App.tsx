@@ -1,5 +1,4 @@
-import React from 'react';
-import { Container, Title, Text, Stack, Group, Tabs, Box, useMantineColorScheme } from '@mantine/core';
+import { Container, Title, Stack, Group, Tabs, Box } from '@mantine/core';
 import { IconForms, IconMap, IconStar, IconCalculator, IconChartLine } from '@tabler/icons-react';
 import DeclinationForm from './components/DeclinationForm';
 import DeclinationResults from './components/DeclinationResults';
@@ -16,7 +15,6 @@ import { AppStateProvider, useAppState } from './contexts/AppStateContext';
 import { useToast } from './contexts/ToastContext';
 
 function AppContent() {
-  const { colorScheme } = useMantineColorScheme();
   const { showToast } = useToast();
   const {
     activeTab,
@@ -39,12 +37,10 @@ function AppContent() {
     
     batchCoordinates,
     setBatchCoordinates,
-    batchResult,
     setBatchResult,
     
     loading,
     setLoading,
-    error,
     setError,
     isMockData,
     

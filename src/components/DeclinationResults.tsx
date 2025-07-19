@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { 
   Title, 
   Text, 
@@ -22,14 +22,10 @@ import {
   IconArrowsDownUp,
   IconInfoCircle
 } from '@tabler/icons-react';
-import { Result as ApiResult } from '../utils/api';
-import { Result as TypesResult } from '../types';
-
-// Allow either type of Result to be passed in
-type CombinedResult = ApiResult | TypesResult;
+import { Result } from '../types';
 
 interface DeclinationResultsProps {
-  result: CombinedResult;
+  result: Result;
   isMockData?: boolean;
   selectedCoordinates?: {
     latitude: number;
@@ -38,37 +34,18 @@ interface DeclinationResultsProps {
   onShare?: () => Promise<void>;
 }
 
-function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }: DeclinationResultsProps) {
+function DeclinationResults({ result }: DeclinationResultsProps) {
   console.log("Rendering DeclinationResults with:", result);
 
-  // Helper function to check if we're dealing with the types.ts Result
-  const isTypesResult = (res: CombinedResult): res is TypesResult => {
-    return typeof res.declination === 'number';
-  };
-
-  // Format declination for display
-  const formatAngle = (angle: number) => {
-    if (angle === undefined || angle === null) return 'N/A';
-    const absAngle = Math.abs(angle);
-    const degrees = Math.floor(absAngle);
-    const minutes = Math.floor((absAngle - degrees) * 60);
-    return `${degrees}° ${minutes.toFixed(0)}'`;
-  };
-
   // For east/west display - IMPORTANT: Negative declination is WEST, positive is EAST
-  // Handle both types of Result
-  const declinationValue = isTypesResult(result) 
-    ? result.declination 
-    : result.declination?.value;
+  const declinationValue = result.declination?.value;
   const isEast = declinationValue !== undefined ? declinationValue >= 0 : false;
   const decimalDeclination = declinationValue !== undefined 
     ? Math.abs(declinationValue).toFixed(5) 
     : 'N/A';
 
   // Annual change
-  const annualChangeValue = isTypesResult(result)
-    ? result.declination_sv
-    : result.declination_sv?.value;
+  const annualChangeValue = result.declination_sv?.value;
   const isIncreasing = annualChangeValue !== undefined ? annualChangeValue >= 0 : false;
   const annualChange = annualChangeValue !== undefined
     ? Math.abs(annualChangeValue).toFixed(5)
@@ -101,20 +78,6 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
     } catch (error) {
       console.error('Error formatting date:', error);
       return String(date) || 'N/A';
-    }
-  };
-
-  // Safe formatting for numeric values
-  const formatNumber = (value: number | { value: number, unit: string } | undefined, decimals = 0) => {
-    if (!value) return 'N/A';
-    try {
-      if (typeof value === 'object') {
-        return `${value.value.toFixed(decimals)} ${value.unit || ''}`;
-      }
-      return `${value.toFixed(decimals)}`;
-    } catch (error) {
-      console.error('Error formatting number:', error, value);
-      return 'N/A';
     }
   };
 
@@ -635,7 +598,7 @@ function DeclinationResults({ result, isMockData, selectedCoordinates, onShare }
         </Grid.Col>
       </Grid>
       
-      {!isTypesResult(result) && !result.inclination && (
+      {!result.inclination && (
         <Alert icon={<IconInfoCircle size={16} />} color="blue" mt="md">
           The NOAA WMMHR API provides declination data only. For additional magnetic field components,
           consider using the IGRF model or the full WMM calculator.
