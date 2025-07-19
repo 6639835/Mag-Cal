@@ -1,38 +1,7 @@
-import axios from 'axios';
+import { DeclinationParams, Result } from '../types';
 
-// Interface for declination parameters
-export interface DeclinationParams {
-  latitude: number;
-  longitude: number;
-  elevation?: number;
-  date?: Date;
-}
-
-interface MagneticComponent {
-  value: number;
-  unit: string;
-}
-
-// Interface for calculation results matching the actual API response
-export interface Result {
-  latitude: number;
-  longitude: number;
-  elevation: number;
-  date: string;
-  declination: MagneticComponent;
-  declination_sv: MagneticComponent;
-  model: string;
-  // These fields are optional as they may not be in the API response
-  inclination?: MagneticComponent;
-  totalIntensity?: MagneticComponent;
-  horizontalIntensity?: MagneticComponent;
-  northComponent?: MagneticComponent;
-  eastComponent?: MagneticComponent;
-  verticalComponent?: MagneticComponent;
-}
-
-// NOAA Geomagnetic Calculator API endpoint - using local proxy to avoid CORS issues
-const NOAA_API_URL = '/api/geomag-web/calculators/calculateDeclination';
+// Re-export types for backward compatibility
+export type { DeclinationParams, Result };
 
 /**
  * Calculate magnetic declination using NOAA's Geomagnetic Calculator API

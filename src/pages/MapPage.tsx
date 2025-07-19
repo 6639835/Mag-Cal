@@ -117,6 +117,7 @@ function MapPage() {
           <Title order={3} mb="lg">Manual Calculation</Title>
           <DeclinationForm 
             onCalculate={handleCalculateSuccess} 
+            onError={(message) => console.error(message)}
             isLoading={loading} 
             setLoading={setLoading}
             initialLatitude={selectedPosition[0]}

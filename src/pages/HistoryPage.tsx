@@ -151,13 +151,13 @@ function HistoryPage() {
               <Table.Tbody>
                 {history.map((item, index) => (
                   <Table.Tr key={index}>
-                    <Table.Td>{formatDate(item.date)}</Table.Td>
+                    <Table.Td>{formatDate(new Date(item.date))}</Table.Td>
                     <Table.Td>
                       {item.latitude.toFixed(6)}°, {item.longitude.toFixed(6)}°
                     </Table.Td>
                     <Table.Td>
-                      <Badge color={item.declination > 0 ? "blue" : "red"}>
-                        {Math.abs(item.declination).toFixed(2)}° {item.declination > 0 ? "E" : "W"}
+                      <Badge color={item.declination.value > 0 ? "blue" : "red"}>
+                        {Math.abs(item.declination.value).toFixed(2)}° {item.declination.value > 0 ? "E" : "W"}
                       </Badge>
                     </Table.Td>
                     <Table.Td>
